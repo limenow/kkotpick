@@ -143,6 +143,18 @@ await expectErr(
   "",
 );
 
+ok(
+  "payment_methods lists only what the shop offers",
+  JSON.stringify(shop.payment_methods) === JSON.stringify(["transfer", "onsite"]),
+  JSON.stringify(shop.payment_methods),
+);
+await expectErr(
+  "payment method the shop does not offer",
+  `select public.create_order('bomnal', $1::timestamptz, 'pink', 'S', 30000, '손님', '01011112222', 'kakaopay')`,
+  [at("13:00")],
+  "payment_method_unavailable",
+);
+
 // RLS
 const owner = "11111111-1111-1111-1111-111111111111",
   other = "22222222-2222-2222-2222-222222222222";

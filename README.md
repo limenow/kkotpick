@@ -15,11 +15,18 @@ Next.js (App Router) · TypeScript · Tailwind CSS · Supabase (Postgres, Auth, 
 필요한 것: Node 22, Docker (로컬 Supabase용)
 
 ```bash
+npm run setup           # 패키지 설치 → 로컬 Supabase 실행 → .env.local 작성 → DB 초기화(데모 꽃집 포함)
+npm run dev             # http://localhost:3000/s/bomnal 에서 데모 꽃집 확인
+```
+
+`npm run setup`이 안 되면 직접:
+
+```bash
 npm install
 cp .env.example .env.local
-npm run db:start        # 로컬 Supabase 실행. 끝나면 URL과 publishable key가 나와요 → .env.local에 넣기
-npm run db:reset        # 마이그레이션 + 데모 가게(seed) 적용
-npm run dev             # http://localhost:3000/s/bomnal 에서 데모 꽃집 확인
+npm run db:start        # 끝나면 나오는 URL과 publishable key를 .env.local에 넣기
+npm run db:reset
+npm run dev
 ```
 
 ## 주요 화면
