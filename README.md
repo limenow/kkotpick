@@ -31,12 +31,20 @@ npm run dev
 
 ## 주요 화면
 
-| 경로              | 화면                            |
-| ----------------- | ------------------------------- |
-| `/s/[slug]`       | 손님이 처음 보는 꽃집 페이지    |
-| `/s/[slug]/order` | 주문서 (만드는 중)              |
-| `/o/[token]`      | 손님 주문 상태 (알림 문자 링크) |
-| `/dashboard`      | 사장님 대시보드 (만드는 중)     |
+| 경로              | 화면                             |
+| ----------------- | -------------------------------- |
+| `/s/[slug]`       | 손님이 처음 보는 꽃집 페이지     |
+| `/s/[slug]/order` | 주문서 (한 화면에 질문 하나씩)   |
+| `/o/[token]`      | 손님 주문 상태 (알림 문자 링크)  |
+| `/login`          | 사장님 로그인 (메일로 받은 코드) |
+| `/dashboard`      | 사장님 주문 목록과 처리          |
+
+### 사장님 화면 써보기 (로컬)
+
+1. `/login`에서 아무 이메일이나 넣고 "코드 받기"
+2. http://127.0.0.1:54324 (로컬 메일함)에서 6자리 코드 확인
+3. 연결 코드 `BOMNAL24`를 넣으면 데모 꽃집 "봄날 꽃방"이 연결돼요
+4. 손님 화면(`/s/bomnal/order`)에서 주문을 넣고 `/dashboard`에서 확인
 
 ## DB 규칙
 
@@ -47,10 +55,14 @@ npm run dev
 
 보안 원칙:
 
-- 손님(anon)은 테이블을 직접 읽거나 쓰지 않아요. `get_shop_public`, `get_available_slots`, `create_order`, `get_order_by_token` RPC로만 접근해요.
+- 손님(anon)은 테이블을 직접 읽거나 쓰지 않아요. `get_shop_public`, `get_available_slots`, `get_order_by_token` RPC로만 읽어요.
+- 주문 넣기(`create_order`)는 브라우저에서 부를 수 없어요. 서버 액션이 서비스 키로 동의 여부와 IP 해시를 실어 불러요. 같은 기기는 한 시간에 10건, 같은 번호는 한 꽃집에 진행 중인 주문 3건까지예요.
+- 가게는 꽃픽만 만들어요(서비스 키). 사장님은 연결 코드(`claim_shop`)로 자기 가게를 연결하고, 공개 여부·주소(slug)는 바꿀 수 없어요.
+- 주문 상태는 `set_order_status`로 정해진 순서로만 바꿔요. 1분 안에는 `undo_order_status`로 되돌릴 수 있어요.
 - 주문 조회는 추측할 수 없는 `public_token`(uuid)을 아는 사람만 할 수 있어요.
 - 사장님은 RLS로 자기 가게 데이터만 봐요. 사장님이 직접 넣는 주문은 `source`가 `link`일 수 없어요.
 - `SUPABASE_SECRET_KEY`는 서버에서만 쓰고 절대 `NEXT_PUBLIC_`을 붙이지 않아요.
+- 배포한 Supabase 프로젝트에서는 Authentication > Emails의 Magic Link, Confirm signup 템플릿을 `supabase/templates/login-code.html` 내용으로 바꿔야 코드가 메일에 나와요.
 
 ## 작업 규칙
 
