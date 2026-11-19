@@ -13,6 +13,10 @@ const MESSAGES: Record<string, string> = {
   invalid_name: "주문하시는 분 이름을 적어주세요.",
   slot_full: "방금 그 시간이 마감됐어요. 다른 시간을 골라주세요.",
   payment_method_unavailable: "이 꽃집에서 받지 않는 결제 방법이에요.",
+  consent_required: "주문 안내 문자를 받으려면 연락처 이용에 동의해주세요.",
+  too_many_orders: "주문이 짧은 시간에 많이 들어왔어요. 한 시간쯤 뒤에 다시 해주세요.",
+  too_many_open_orders: "이 번호로 진행 중인 주문이 3건 있어요. 더 필요하면 꽃집에 전화해주세요.",
+  input_too_long: "요청사항이 너무 길어요. 500자 안으로 줄여주세요.",
 };
 
 export function orderErrorMessage(raw: string | undefined): string {

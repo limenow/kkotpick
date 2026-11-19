@@ -6,6 +6,8 @@ export type BouquetSize = "S" | "M" | "L";
 export type OrderStatus =
   "pending" | "accepted" | "making" | "ready" | "picked_up" | "rejected" | "canceled";
 
+export type OrderSource = "link" | "phone" | "kakao" | "naver" | "instagram" | "walk_in";
+
 export type PaymentMethod = "transfer" | "kakaopay" | "toss" | "onsite";
 export type PaymentStatus = "unpaid" | "confirmed" | "paid_onsite" | "refunded";
 
@@ -68,4 +70,25 @@ export interface OrderView {
     toss_link: string | null;
   };
   photos: string[];
+}
+
+// 사장님 주문 목록 한 줄
+export interface OwnerOrder {
+  id: string;
+  order_no: number;
+  source: OrderSource;
+  type: "same_day" | "reservation";
+  status: OrderStatus;
+  pickup_at: string;
+  color_key: ColorKey;
+  size: BouquetSize;
+  budget: number;
+  purpose: string | null;
+  request_note: string | null;
+  customer_name: string;
+  customer_phone: string;
+  payment_method: PaymentMethod;
+  payment_status: PaymentStatus;
+  reject_reason: string | null;
+  created_at: string;
 }

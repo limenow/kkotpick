@@ -1,4 +1,11 @@
-import type { BouquetSize, ColorKey, OrderStatus, PaymentMethod } from "./types";
+import type {
+  BouquetSize,
+  ColorKey,
+  OrderSource,
+  OrderStatus,
+  PaymentMethod,
+  PaymentStatus,
+} from "./types";
 
 export const PAYMENT_METHODS: Record<PaymentMethod, string> = {
   transfer: "계좌이체",
@@ -46,12 +53,19 @@ export const STATUS_HEADLINES: Record<OrderStatus, string> = {
   canceled: "주문을 취소했어요",
 };
 
-/** 01012345678 → 010-1234-5678 */
+/**
+ * 휴대폰 번호를 하이픈 넣은 모양으로 맞춘다. 입력하는 중에도 쓴다.
+ * 01027402919, 010-27402919, +82 10 2740 2919 → 010-2740-2919
+ */
 export function formatPhone(raw: string) {
-  const d = raw.replace(/\D/g, "");
-  if (d.length === 11) return `${d.slice(0, 3)}-${d.slice(3, 7)}-${d.slice(7)}`;
-  if (d.length === 10) return `${d.slice(0, 3)}-${d.slice(3, 6)}-${d.slice(6)}`;
-  return raw;
+  let d = raw.replace(/\D/g, "");
+  if (d.startsWith("82")) d = "0" + d.slice(2);
+  d = d.slice(0, 11);
+  if (d.length <= 3) return d;
+  // 010은 3-4-4. 011, 016 같은 옛 번호는 10자리면 3-3-4, 11자리면 3-4-4.
+  const mid = d.startsWith("010") || d.length === 11 ? 4 : 3;
+  if (d.length <= 3 + mid) return `${d.slice(0, 3)}-${d.slice(3)}`;
+  return `${d.slice(0, 3)}-${d.slice(3, 3 + mid)}-${d.slice(3 + mid)}`;
 }
 
 export const won = (n: number) => `${n.toLocaleString("ko-KR")}원`;
@@ -74,3 +88,36 @@ export const seoulDateTime = (iso: string) =>
     minute: "2-digit",
     hour12: false,
   }).format(new Date(iso));
+
+// 사장님 화면에서 쓰는 이름
+export const OWNER_STATUS: Record<OrderStatus, string> = {
+  pending: "새 주문",
+  accepted: "수락함",
+  making: "만드는 중",
+  ready: "완성",
+  picked_up: "픽업 완료",
+  rejected: "거절함",
+  canceled: "취소함",
+};
+
+export const SOURCES: Record<OrderSource, string> = {
+  link: "링크",
+  phone: "전화",
+  kakao: "카톡",
+  naver: "네이버",
+  instagram: "인스타",
+  walk_in: "방문",
+};
+
+export const PAYMENT_STATUS: Record<PaymentStatus, string> = {
+  unpaid: "입금 전",
+  confirmed: "입금 확인",
+  paid_onsite: "현장 결제",
+  refunded: "환불함",
+};
+
+export const REJECT_REASONS = [
+  "그 시간은 주문이 다 찼어요",
+  "원하는 색감의 꽃이 없어요",
+  "그날은 주문을 받기 어려워요",
+];

@@ -1,6 +1,8 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { clientHash } from "@/lib/client-hash";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { orderErrorMessage } from "@/lib/order-errors";
 import type { Slot } from "@/lib/types";
@@ -34,8 +36,9 @@ export async function submitOrder(
   const budget = Number(get("budget"));
   if (!Number.isInteger(budget) || budget <= 0) return { error: "예산을 골라주세요." };
 
-  const supabase = await createClient();
-  const { data, error } = await supabase.rpc("create_order", {
+  // create_order는 브라우저에서 바로 부를 수 없게 막아뒀다. 동의와 기기 해시를 실어 서버에서만 부른다.
+  const admin = createAdminClient();
+  const { data, error } = await admin.rpc("create_order", {
     p_slug: get("slug"),
     p_pickup_at: pickupAt,
     p_color_key: get("color_key"),
@@ -43,6 +46,8 @@ export async function submitOrder(
     p_budget: budget,
     p_customer_name: get("customer_name"),
     p_customer_phone: get("customer_phone"),
+    p_consent: true,
+    p_client_hash: await clientHash(),
     p_payment_method: get("payment_method") || "onsite",
     p_purpose: get("purpose") || null,
     p_request_note: get("request_note") || null,
