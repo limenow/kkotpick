@@ -8,6 +8,19 @@ import { sendCode, verifyCode, type LoginState } from "./actions";
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+// 한국에서 많이 쓰는 메일 순서
+const DOMAINS = ["naver.com", "gmail.com", "daum.net", "hanmail.net", "kakao.com", "nate.com"];
+
+/** 입력 중인 이메일에 붙일 수 있는 도메인 후보 */
+function domainSuggestions(value: string) {
+  const v = value.trim();
+  if (!v || v.startsWith("@")) return [];
+  const at = v.indexOf("@");
+  if (at === -1) return DOMAINS;
+  const typed = v.slice(at + 1).toLowerCase();
+  return DOMAINS.filter((d) => d.startsWith(typed) && d !== typed);
+}
+
 // 토스처럼 한 화면에 한 가지만 묻는다: 이메일 → 코드
 export function LoginFlow({ mailboxUrl }: { mailboxUrl?: string }) {
   const [sent, sendAction, sending] = useActionState<LoginState, FormData>(sendCode, {
@@ -68,6 +81,26 @@ export function LoginFlow({ mailboxUrl }: { mailboxUrl?: string }) {
             aria-describedby={sent.error ? "email-error" : undefined}
             className="border-line focus:border-rose border-b-2 bg-transparent py-2 text-[22px] font-semibold outline-none placeholder:font-normal placeholder:text-[#C9BDB5]"
           />
+          {domainSuggestions(email).length > 0 && (
+            <div
+              role="group"
+              aria-label="메일 주소 고르기"
+              className="-mx-6 flex [scrollbar-width:none] gap-2 overflow-x-auto px-6 pt-1 pb-1"
+            >
+              {domainSuggestions(email).map((d) => (
+                <button
+                  key={d}
+                  type="button"
+                  // 누르는 동안 입력칸 포커스가 빠지지 않게 해서 키보드가 내려가지 않게 한다
+                  onPointerDown={(e) => e.preventDefault()}
+                  onClick={() => setEmail(`${email.trim().split("@")[0]}@${d}`)}
+                  className="bg-soft active:bg-line min-h-10 shrink-0 rounded-full px-4 text-[15px]"
+                >
+                  @{d}
+                </button>
+              ))}
+            </div>
+          )}
           {sent.error && (
             <span id="email-error" role="alert" className="text-rose text-sm">
               {sent.error}
