@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
-import { PageLoading } from "@/components/page-loading";
+import { PageSkeleton, Skeleton } from "@/components/ui/skeleton";
 import { createClient } from "@/lib/supabase/server";
 import { reservationDates, seoulToday } from "@/lib/dates";
 import type { PublicShop } from "@/lib/types";
@@ -10,9 +10,33 @@ import { OrderForm } from "./order-form";
 // 손님 주문서 (디자인: 2. 주문하기)
 export default function OrderPage(props: PageProps<"/s/[slug]/order">) {
   return (
-    <Suspense fallback={<PageLoading />}>
+    <Suspense fallback={<OrderFormSkeleton />}>
       <OrderFormContent params={props.params} />
     </Suspense>
+  );
+}
+
+function OrderFormSkeleton() {
+  return (
+    <PageSkeleton>
+      <div className="flex flex-col gap-4 px-5 pt-4">
+        <Skeleton className="h-10 w-32" />
+        <Skeleton className="h-1.5" />
+        <Skeleton className="mt-4 h-5 w-28" />
+        <Skeleton className="h-12 rounded-2xl" />
+        <div className="flex gap-2">
+          {[0, 1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-11 w-18 rounded-full" />
+          ))}
+        </div>
+        <Skeleton className="mt-4 h-5 w-36" />
+        <div className="grid grid-cols-3 gap-2.5">
+          {[0, 1, 2, 3, 4, 5].map((i) => (
+            <Skeleton key={i} className="h-22 rounded-2xl" />
+          ))}
+        </div>
+      </div>
+    </PageSkeleton>
   );
 }
 

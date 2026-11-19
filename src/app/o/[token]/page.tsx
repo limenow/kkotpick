@@ -1,9 +1,10 @@
 import { Suspense } from "react";
-import { PageLoading } from "@/components/page-loading";
+import { PageSkeleton, Skeleton } from "@/components/ui/skeleton";
+import { ProgressBar } from "@/components/ui/progress-bar";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { publicImageUrl } from "@/lib/supabase/storage";
-import { COLORS, SIZES, STATUS_STEPS, seoulDateTime, won } from "@/lib/labels";
+import { COLORS, SIZES, STATUS_HEADLINES, STATUS_STEPS, seoulDateTime, won } from "@/lib/labels";
 import type { OrderView } from "@/lib/types";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -11,9 +12,25 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 // 손님 주문 상태 화면. 알림 문자 링크로 열린다. (디자인: 3. 주문 상태)
 export default function OrderStatusPage(props: PageProps<"/o/[token]">) {
   return (
-    <Suspense fallback={<PageLoading />}>
+    <Suspense fallback={<OrderSkeleton />}>
       <OrderContent params={props.params} />
     </Suspense>
+  );
+}
+
+function OrderSkeleton() {
+  return (
+    <PageSkeleton>
+      <div className="flex flex-col gap-6 px-5 py-6">
+        <Skeleton className="h-36 rounded-3xl" />
+        {[0, 1, 2, 3, 4].map((i) => (
+          <div key={i} className="flex items-center gap-4">
+            <Skeleton className="size-7 rounded-full" />
+            <Skeleton className="h-4 w-28" />
+          </div>
+        ))}
+      </div>
+    </PageSkeleton>
   );
 }
 
@@ -28,18 +45,30 @@ async function OrderContent({ params }: { params: PageProps<"/o/[token]">["param
   if (!order) notFound();
 
   const closed = order.status === "rejected" || order.status === "canceled";
+  const headline = STATUS_HEADLINES[order.status];
   const current = STATUS_STEPS.findIndex((s) => s.key === order.status);
 
   return (
     <main className="mx-auto flex w-full max-w-md flex-col gap-6 px-5 py-6">
-      <section className="bg-rose flex flex-col gap-1 rounded-3xl p-6 text-white">
+      <section className="bg-rose flex flex-col gap-2 rounded-3xl p-6 text-white">
         <span className="text-sm opacity-90">
           {order.shop.name} · 주문번호 {order.order_no}
         </span>
-        <span className="text-2xl font-bold">
-          {closed ? "주문이 취소됐어요" : STATUS_STEPS[current]?.label}
-        </span>
-        <span>{seoulDateTime(order.pickup_at)} 픽업</span>
+        <h1 className="text-2xl leading-snug font-bold">{headline}</h1>
+        <span>{seoulDateTime(order.pickup_at)}에 받아요</span>
+        {!closed && (
+          <div className="flex items-center gap-3 pt-2">
+            <ProgressBar
+              value={current + 1}
+              max={STATUS_STEPS.length}
+              label="주문 진행 정도"
+              tone="light"
+            />
+            <span className="shrink-0 text-xs opacity-90">
+              {current + 1}/{STATUS_STEPS.length}
+            </span>
+          </div>
+        )}
       </section>
 
       {closed ? (
