@@ -60,7 +60,7 @@ const at = (hhmm) => `${d} ${hhmm}:00+09`;
 const H = "a".repeat(64); // 서버가 넘기는 기기 해시 흉내
 
 const shop = (await db.query(`select public.get_shop_public('bomnal') as j`)).rows[0].j;
-ok("get_shop_public returns shop", shop?.name === "봄날 꽃방" && shop.samples.length === 3);
+ok("get_shop_public returns shop", shop?.name === "봄날 꽃방" && shop.samples.length === 9 && shop.samples[0].mood === "러블리");
 ok("get_shop_public hides bank account", !JSON.stringify(shop).includes("000-0000-0000"));
 
 const slots = (await db.query(`select * from public.get_available_slots('bomnal', $1::date)`, [d]))
@@ -74,6 +74,14 @@ const order = (
   )
 ).rows[0].j;
 ok("create_order returns token", !!order?.public_token);
+const feel = (
+  await db.query(
+    `select public.create_order('bomnal', $1::timestamptz, 'pink', 'M', 50000, '김민수', '01088887777', true, '${"f".repeat(64)}', 'onsite', '생일', null, '여자친구', '러블리') as j`,
+    [at("13:00")],
+  )
+).rows[0].j;
+const feelView = (await db.query(`select public.get_order_by_token($1::uuid) as j`, [feel.public_token])).rows[0].j;
+ok("recipient and mood saved", feelView.recipient === "여자친구" && feelView.mood === "러블리");
 
 const view = (
   await db.query(`select public.get_order_by_token($1::uuid) as j`, [order.public_token])

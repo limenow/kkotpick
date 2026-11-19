@@ -136,9 +136,20 @@ export function OrderCard({ order }: { order: OwnerOrder }) {
         {color.label} · {order.size} {SIZES[order.size]} · {manwon(order.budget)}
       </div>
 
-      {(order.purpose || order.request_note) && (
+      {(order.recipient || order.purpose || order.mood || order.request_note) && (
         <div className="bg-ground flex flex-col gap-1 rounded-2xl px-4 py-3 text-[15px]">
-          {order.purpose && <span className="text-muted text-sm">{order.purpose}</span>}
+          {(order.recipient || order.purpose || order.mood) && (
+            <span className="font-semibold">
+              {[
+                [order.recipient, order.purpose === "그냥" ? null : order.purpose]
+                  .filter(Boolean)
+                  .join(" "),
+                order.mood,
+              ]
+                .filter(Boolean)
+                .join(" · ")}
+            </span>
+          )}
           {order.request_note && <p className="leading-relaxed">{order.request_note}</p>}
         </div>
       )}

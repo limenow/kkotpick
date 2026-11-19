@@ -48,7 +48,7 @@ async function Orders({ searchParams }: { searchParams: PageProps<"/dashboard">[
   const { data, error } = await supabase
     .from("orders")
     .select(
-      "id, order_no, source, type, status, pickup_at, color_key, size, budget, purpose, request_note, customer_name, customer_phone, payment_method, payment_status, reject_reason, created_at",
+      "id, order_no, source, type, status, pickup_at, color_key, size, budget, purpose, recipient, mood, request_note, customer_name, customer_phone, payment_method, payment_status, reject_reason, created_at",
     )
     .eq("shop_id", shop.id)
     .gte("pickup_at", from)

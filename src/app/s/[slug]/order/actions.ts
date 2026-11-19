@@ -54,6 +54,8 @@ export async function submitOrder(
     p_payment_method: get("payment_method") || "onsite",
     p_purpose: get("purpose") || null,
     p_request_note: get("request_note") || null,
+    p_recipient: get("recipient") || null,
+    p_mood: get("mood") || null,
   });
 
   if (error) return { error: orderErrorMessage(error.message) };

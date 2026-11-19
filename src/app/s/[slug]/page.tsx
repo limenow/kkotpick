@@ -133,8 +133,12 @@ async function ShopContent({ params }: { params: PageProps<"/s/[slug]">["params"
                   tint={s.color_key ? `${COLORS[s.color_key].hex}55` : "#FBE9EE"}
                 />
                 <span className="text-sm font-medium">{s.title}</span>
-                {s.budget_hint && (
-                  <span className="text-muted text-xs">{manwon(s.budget_hint)}대 예시</span>
+                {(s.mood || s.budget_hint) && (
+                  <span className="text-muted text-xs">
+                    {[s.mood, s.budget_hint ? `${manwon(s.budget_hint)}대` : null]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </span>
                 )}
               </li>
             ))}
