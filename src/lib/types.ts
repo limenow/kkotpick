@@ -32,7 +32,13 @@ export interface PublicShop {
   reservation_max_days: number;
   slot_minutes: number;
   available_colors: ColorKey[];
+  payment_methods: PaymentMethod[];
   samples: ShopSample[];
+}
+
+export interface Slot {
+  slot_start: string;
+  remaining: number;
 }
 
 export interface OrderView {

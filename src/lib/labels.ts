@@ -1,4 +1,15 @@
-import type { BouquetSize, ColorKey, OrderStatus } from "./types";
+import type { BouquetSize, ColorKey, OrderStatus, PaymentMethod } from "./types";
+
+export const PAYMENT_METHODS: Record<PaymentMethod, string> = {
+  transfer: "계좌이체",
+  kakaopay: "카카오페이 송금",
+  toss: "토스 송금",
+  onsite: "매장에서 결제",
+};
+
+export const PURPOSES = ["생일", "고백", "졸업", "감사", "기념일", "그냥"] as const;
+
+export const BUDGET_OPTIONS = [10000, 20000, 30000, 50000, 70000, 100000];
 
 export const COLORS: Record<ColorKey, { label: string; hex: string }> = {
   pink: { label: "핑크", hex: "#F4A7B9" },
