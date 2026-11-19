@@ -47,26 +47,63 @@ async function OrderContent({ params }: { params: PageProps<"/o/[token]">["param
           {order.reject_reason ?? "꽃집 사정으로 주문을 받지 못했어요."}
         </p>
       ) : (
-        <ol className="flex flex-col gap-3 px-2">
-          {STATUS_STEPS.map((s, i) => (
-            <li key={s.key} className="flex items-center gap-3">
-              <span
-                aria-hidden
-                className={`size-5 rounded-full ${
-                  i < current
-                    ? "bg-rose"
-                    : i === current
-                      ? "border-rose border-[6px]"
-                      : "border-line border-2"
-                }`}
-              />
-              <span
-                className={i === current ? "text-rose font-bold" : i < current ? "" : "text-muted"}
-              >
-                {s.label}
-              </span>
-            </li>
-          ))}
+        <ol aria-label="주문 진행 단계" className="flex flex-col px-1">
+          {STATUS_STEPS.map((s, i) => {
+            const done = i < current;
+            const now = i === current;
+            const last = i === STATUS_STEPS.length - 1;
+            return (
+              <li key={s.key} aria-current={now ? "step" : undefined} className="flex gap-4">
+                <div className="flex w-7 flex-col items-center">
+                  {done ? (
+                    <span className="bg-rose flex size-7 shrink-0 items-center justify-center rounded-full text-white">
+                      <svg
+                        aria-hidden
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="3"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M5 12l5 5L19 7" />
+                      </svg>
+                    </span>
+                  ) : now ? (
+                    <span className="bg-rose-soft flex size-7 shrink-0 items-center justify-center rounded-full">
+                      <span className="bg-rose size-3 animate-pulse rounded-full" />
+                    </span>
+                  ) : (
+                    <span className="flex size-7 shrink-0 items-center justify-center">
+                      <span className="bg-line size-2.5 rounded-full" />
+                    </span>
+                  )}
+                  {!last && (
+                    <span
+                      aria-hidden
+                      className={`my-1 w-0.5 flex-1 ${done ? "bg-rose" : "bg-line"}`}
+                    />
+                  )}
+                </div>
+                <div className={`flex flex-col gap-0.5 ${last ? "" : "pb-6"} pt-0.5`}>
+                  <span
+                    className={now ? "text-rose font-bold" : done ? "font-medium" : "text-muted"}
+                  >
+                    {s.label}
+                    {done && <span className="sr-only"> (완료)</span>}
+                    {now && (
+                      <span className="bg-rose-soft text-rose ml-2 rounded-md px-1.5 py-0.5 text-xs font-bold">
+                        지금
+                      </span>
+                    )}
+                  </span>
+                  {(done || now) && <span className="text-muted text-sm">{s.desc}</span>}
+                </div>
+              </li>
+            );
+          })}
         </ol>
       )}
 

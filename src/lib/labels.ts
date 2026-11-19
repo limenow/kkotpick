@@ -27,12 +27,12 @@ export const SIZES: Record<BouquetSize, string> = {
 };
 
 // 손님 화면의 진행 단계 (거절·취소는 따로 표시)
-export const STATUS_STEPS: { key: OrderStatus; label: string }[] = [
-  { key: "pending", label: "주문접수" },
-  { key: "accepted", label: "꽃집 수락" },
-  { key: "making", label: "제작중" },
-  { key: "ready", label: "완성" },
-  { key: "picked_up", label: "픽업완료" },
+export const STATUS_STEPS: { key: OrderStatus; label: string; desc: string }[] = [
+  { key: "pending", label: "주문접수", desc: "꽃집에서 주문을 확인하고 있어요" },
+  { key: "accepted", label: "꽃집 수락", desc: "꽃집이 주문을 받았어요" },
+  { key: "making", label: "제작중", desc: "그날 들어온 꽃으로 만들고 있어요" },
+  { key: "ready", label: "완성", desc: "사진 확인하고 받으러 오세요" },
+  { key: "picked_up", label: "픽업완료", desc: "받아가셨어요. 좋은 하루 보내세요" },
 ];
 
 export const won = (n: number) => `${n.toLocaleString("ko-KR")}원`;
