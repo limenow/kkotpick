@@ -10,7 +10,7 @@ const MESSAGES: Record<string, string> = {
   color_unavailable: "오늘은 그 색감의 꽃이 없어요. 다른 색감을 골라주세요.",
   budget_below_minimum: "이 꽃집의 최소 예산보다 낮아요.",
   invalid_phone: "연락처를 다시 확인해주세요. 예) 010-1234-5678",
-  invalid_name: "주문하시는 분 이름을 적어주세요.",
+  invalid_name: "이름은 한글이나 영어로 적어주세요.",
   slot_full: "방금 그 시간이 마감됐어요. 다른 시간을 골라주세요.",
   payment_method_unavailable: "이 꽃집에서 받지 않는 결제 방법이에요.",
   consent_required: "주문 안내 문자를 받으려면 연락처 이용에 동의해주세요.",

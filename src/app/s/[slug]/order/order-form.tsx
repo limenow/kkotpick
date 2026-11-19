@@ -18,6 +18,7 @@ import {
   manwon,
   won,
 } from "@/lib/labels";
+import { nameProblem, normalizeName } from "@/lib/customer-name";
 import type { BouquetSize, ColorKey, PaymentMethod, PublicShop, Slot } from "@/lib/types";
 import { fetchSlots, submitOrder, type OrderFormState } from "./actions";
 
@@ -67,6 +68,7 @@ export function OrderForm({
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [consent, setConsent] = useState(false);
+  const [nameFocused, setNameFocused] = useState(false);
 
   const [state, formAction, submitting] = useActionState<OrderFormState, FormData>(submitOrder, {});
 
@@ -104,7 +106,7 @@ export function OrderForm({
     if (!c || !colors.includes(c)) return STEPS.indexOf("color");
     if (!(p.size ?? size)) return STEPS.indexOf("size");
     if (!(p.budget ?? budget)) return STEPS.indexOf("budget");
-    if (!name.trim() || !PHONE.test(phone.replace(/\D/g, "")) || !consent)
+    if (nameProblem(name) || !PHONE.test(phone.replace(/\D/g, "")) || !consent)
       return STEPS.indexOf("who");
     if (!(p.payment ?? payment)) return STEPS.indexOf("pay");
     return STEPS.indexOf("review");
@@ -138,6 +140,8 @@ export function OrderForm({
 
   const whenText = pickupAt ? `${isToday ? "오늘" : dateLabel(date)} ${timeLabel(pickupAt)}` : "";
   const phoneOk = PHONE.test(phone.replace(/\D/g, ""));
+  // 한글은 입력하는 도중에 자음·모음이 잠깐 보이므로, 칸을 벗어났을 때만 안내를 보여준다
+  const nameError = name.trim() && !nameFocused ? nameProblem(name) : null;
 
   return (
     <form action={formAction} className="mx-auto flex w-full max-w-md flex-1 flex-col pb-40">
@@ -178,7 +182,7 @@ export function OrderForm({
       <input type="hidden" name="budget" value={budget ?? ""} />
       <input type="hidden" name="purpose" value={purpose} />
       <input type="hidden" name="request_note" value={note} />
-      <input type="hidden" name="customer_name" value={name.trim()} />
+      <input type="hidden" name="customer_name" value={normalizeName(name)} />
       <input type="hidden" name="customer_phone" value={phone} />
       <input type="hidden" name="consent" value={consent ? "on" : ""} />
       <input type="hidden" name="payment_method" value={payment ?? ""} />
@@ -389,9 +393,18 @@ export function OrderForm({
                 enterKeyHint="next"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="홍길동"
-                className="border-line focus:border-rose border-b-2 bg-transparent py-2 text-[22px] font-semibold outline-none placeholder:font-normal placeholder:text-[#C9BDB5]"
+                onFocus={() => setNameFocused(true)}
+                onBlur={() => setNameFocused(false)}
+                aria-invalid={nameError ? true : undefined}
+                aria-describedby={nameError ? "name-error" : undefined}
+                placeholder="한글이나 영어 이름"
+                className="border-line focus:border-rose aria-invalid:border-rose border-b-2 bg-transparent py-2 text-[22px] font-semibold outline-none placeholder:font-normal placeholder:text-[#C9BDB5]"
               />
+              {nameError && (
+                <span id="name-error" role="alert" className="text-rose text-sm">
+                  {nameError}
+                </span>
+              )}
             </label>
             <label className="flex flex-col gap-2">
               <span className="text-muted text-sm">휴대폰 번호</span>
@@ -429,7 +442,7 @@ export function OrderForm({
             <BottomCTA>
               <button
                 type="button"
-                disabled={!name.trim() || !phoneOk || !consent}
+                disabled={Boolean(nameProblem(name)) || !phoneOk || !consent}
                 onClick={() => next()}
                 className={ctaClass}
               >
@@ -512,7 +525,7 @@ export function OrderForm({
                 label="주문하는 분"
                 value={
                   <span className="flex flex-col">
-                    {name.trim()}
+                    {normalizeName(name)}
                     <span className="tabular-nums">{phone}</span>
                   </span>
                 }

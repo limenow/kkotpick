@@ -136,6 +136,7 @@ declare
   v_taken integer;
   v_phone text := regexp_replace(coalesce(p_customer_phone, ''), '[^0-9]', '', 'g');
   v_order public.orders;
+  v_name text;
 begin
   if p_consent is not true then raise exception 'consent_required' using errcode = 'P0001'; end if;
   if p_client_hash is null or p_client_hash !~ '^[0-9a-f]{64}$' then
@@ -180,7 +181,14 @@ begin
     raise exception 'budget_below_minimum' using errcode = 'P0001';
   end if;
   if v_phone !~ '^01[0-9]{8,9}$' then raise exception 'invalid_phone' using errcode = 'P0001'; end if;
-  if char_length(coalesce(trim(p_customer_name), '')) not between 1 and 30 then
+  -- 이름은 한글 이름(2~10자, 한 번 띄어쓰기까지)이나 영어 이름(2~30자)만
+  v_name := regexp_replace(trim(coalesce(p_customer_name, '')), '\s+', ' ', 'g');
+  if not (
+    (v_name ~ '^[가-힣]+( [가-힣]+)?$' and char_length(replace(v_name, ' ', '')) between 2 and 10)
+    or (v_name ~ '^[A-Za-z]+(\.? [A-Za-z]+|[''.-][A-Za-z]+)*$'
+        and char_length(v_name) between 2 and 30
+        and char_length(regexp_replace(v_name, '[ ''.-]', '', 'g')) >= 2)
+  ) then
     raise exception 'invalid_name' using errcode = 'P0001';
   end if;
   if char_length(coalesce(p_purpose, '')) > 30 or char_length(coalesce(p_request_note, '')) > 500 then
@@ -215,7 +223,7 @@ begin
     customer_name, customer_phone, payment_method, consented_at, client_hash
   ) values (
     v_shop.id, 'link', v_type, p_pickup_at, p_color_key, p_size, p_budget, p_purpose, p_request_note,
-    trim(p_customer_name), v_phone, p_payment_method, now(), p_client_hash
+    v_name, v_phone, p_payment_method, now(), p_client_hash
   ) returning * into v_order;
 
   return jsonb_build_object('order_no', v_order.order_no, 'public_token', v_order.public_token);

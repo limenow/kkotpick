@@ -195,6 +195,27 @@ await expectErr(
   [at("10:00")],
   "too_many_open_orders",
 );
+for (const bad of ["ㅋㅋㅋ", "홍길동1", "김", "Lim 혜원", "!!"]) {
+  await expectErr(
+    `name rejected: ${bad}`,
+    `select public.create_order('bomnal', $1::timestamptz, 'pink', 'S', 30000, $2, '01077770000', true, '${"e".repeat(64)}')`,
+    [at("10:00"), bad],
+    "invalid_name",
+  );
+}
+const goodNames = (
+  await db.query(
+    `select n from unnest(array['남궁 민수', 'Hyewon Lim', 'Mary-Jane O''Neil', 'J. Kim']) n`,
+  )
+).rows.map((r) => r.n);
+for (const good of goodNames) {
+  const r = await db.query(
+    `select (regexp_replace(trim($1), '\s+', ' ', 'g') ~ '^[가-힣]+( [가-힣]+)?$'
+         or regexp_replace(trim($1), '\s+', ' ', 'g') ~ '^[A-Za-z]+(\.? [A-Za-z]+|[''.-][A-Za-z]+)*$') ok`,
+    [good],
+  );
+  ok(`name accepted: ${good}`, r.rows[0].ok);
+}
 await expectErr(
   "purpose too long",
   `select public.create_order('bomnal', $1::timestamptz, 'pink', 'S', 30000, '손님', '01077770000', true, '${"d".repeat(64)}', 'onsite', repeat('가', 31))`,

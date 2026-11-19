@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { clientHash } from "@/lib/client-hash";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { nameProblem, normalizeName } from "@/lib/customer-name";
 import { orderErrorMessage } from "@/lib/order-errors";
 import type { Slot } from "@/lib/types";
 
@@ -33,6 +34,8 @@ export async function submitOrder(
   }
   const pickupAt = get("pickup_at");
   if (!pickupAt) return { error: "픽업 시간을 골라주세요." };
+  const nameError = nameProblem(get("customer_name"));
+  if (nameError) return { error: nameError };
   const budget = Number(get("budget"));
   if (!Number.isInteger(budget) || budget <= 0) return { error: "예산을 골라주세요." };
 
@@ -44,7 +47,7 @@ export async function submitOrder(
     p_color_key: get("color_key"),
     p_size: get("size"),
     p_budget: budget,
-    p_customer_name: get("customer_name"),
+    p_customer_name: normalizeName(get("customer_name")),
     p_customer_phone: get("customer_phone"),
     p_consent: true,
     p_client_hash: await clientHash(),
