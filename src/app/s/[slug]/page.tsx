@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SampleImage } from "@/components/sample-image";
+import { FloatingOrder } from "./floating-order";
 import { AccordionItem } from "@/components/ui/accordion";
 import { PageSkeleton, Skeleton } from "@/components/ui/skeleton";
 import { createClient } from "@/lib/supabase/server";
@@ -52,15 +53,10 @@ async function ShopContent({ params }: { params: PageProps<"/s/[slug]">["params"
 
   return (
     <main className="mx-auto w-full max-w-md pb-32">
-      {/* 스티키 헤더: 어디까지 내려도 가게 이름과 주문 버튼이 보인다 */}
-      <header className="border-line bg-ground/95 sticky top-0 z-20 flex h-14 items-center justify-between border-b px-4 backdrop-blur">
+      <FloatingOrder href={orderHref} watchId="hero-cta" />
+      {/* 스티키 헤더: 가게 이름만. 주문 버튼은 위 버튼이 지나가면 아래에 뜬다 (FloatingOrder) */}
+      <header className="border-line bg-ground/95 sticky top-0 z-20 flex h-14 items-center border-b px-5 backdrop-blur">
         <span className="text-rose font-bold">{shop.name}</span>
-        <Link
-          href={orderHref}
-          className="bg-rose-soft text-rose flex min-h-9 items-center rounded-full px-4 text-sm font-bold"
-        >
-          주문하기
-        </Link>
       </header>
 
       {/* 히어로 */}
@@ -82,6 +78,7 @@ async function ShopContent({ params }: { params: PageProps<"/s/[slug]">["params"
             보내드려요.
           </p>
           <Link
+            id="hero-cta"
             href={orderHref}
             className="bg-rose mt-1 flex min-h-14 items-center justify-center rounded-2xl text-lg font-bold text-white"
           >
