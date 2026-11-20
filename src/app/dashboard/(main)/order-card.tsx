@@ -17,7 +17,9 @@ import {
   manwon,
 } from "@/lib/labels";
 import type { OrderStatus, OwnerOrder, PaymentStatus } from "@/lib/types";
+import { publicImageUrl } from "@/lib/supabase/storage";
 import { changePayment, changeStatus, undoStatus, type ActionResult } from "../actions";
+import { ReadySheet, type ShopInfo } from "./ready-sheet";
 
 // 상태마다 사장님이 다음에 할 일 하나를 큰 버튼으로 보여준다.
 const NEXT: Partial<Record<OrderStatus, { to: OrderStatus; label: string; done: string }>> = {
@@ -37,8 +39,10 @@ const PILL: Record<OrderStatus, string> = {
   canceled: "bg-soft text-muted",
 };
 
-export function OrderCard({ order }: { order: OwnerOrder }) {
+export function OrderCard({ order, shop }: { order: OwnerOrder; shop: ShopInfo }) {
   const toast = useToast();
+  const [ready, setReady] = useState<"photo" | "send" | null>(null);
+  const photo = order.photos.at(-1)?.image_path;
   const [pending, start] = useTransition();
   const [sheet, setSheet] = useState<"reject" | "cancel" | null>(null);
   const [reason, setReason] = useState("");
@@ -136,11 +140,42 @@ export function OrderCard({ order }: { order: OwnerOrder }) {
         {color.label} · {order.size} {SIZES[order.size]} · {manwon(order.budget)}
       </div>
 
-      {(order.purpose || order.request_note) && (
+      {(order.recipient || order.purpose || order.mood || order.request_note) && (
         <div className="bg-ground flex flex-col gap-1 rounded-2xl px-4 py-3 text-[15px]">
-          {order.purpose && <span className="text-muted text-sm">{order.purpose}</span>}
+          {(order.recipient || order.purpose || order.mood) && (
+            <span className="font-semibold">
+              {[
+                [order.recipient, order.purpose === "그냥" ? null : order.purpose]
+                  .filter(Boolean)
+                  .join(" "),
+                order.mood,
+              ]
+                .filter(Boolean)
+                .join(" · ")}
+            </span>
+          )}
           {order.request_note && <p className="leading-relaxed">{order.request_note}</p>}
         </div>
+      )}
+
+      {photo && (order.status === "ready" || order.status === "picked_up") && (
+        // eslint-disable-next-line @next/next/no-img-element -- 스토리지 사진
+        <img
+          src={publicImageUrl("order-photos", photo)}
+          alt={`#${order.order_no} 완성 사진`}
+          loading="lazy"
+          className="bg-soft h-40 w-full rounded-2xl object-cover"
+        />
+      )}
+
+      {order.status === "ready" && (
+        <button
+          type="button"
+          onClick={() => setReady(photo ? "send" : "photo")}
+          className="text-rose border-rose/30 bg-rose-soft min-h-12 rounded-2xl border text-[15px] font-semibold"
+        >
+          {photo ? "손님에게 사진 다시 보내기" : "완성 사진 찍어 보내기"}
+        </button>
       )}
 
       <dl className="grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-2 text-[15px]">
@@ -208,7 +243,7 @@ export function OrderCard({ order }: { order: OwnerOrder }) {
               <button
                 type="button"
                 disabled={pending}
-                onClick={() => move(next.to, next.done)}
+                onClick={() => (next.to === "ready" ? setReady("photo") : move(next.to, next.done))}
                 className={`${ctaClass} flex-1`}
               >
                 {next.label}
@@ -287,6 +322,9 @@ export function OrderCard({ order }: { order: OwnerOrder }) {
           </button>
         </div>
       </Sheet>
+      {ready && (
+        <ReadySheet order={order} shop={shop} startAt={ready} onClose={() => setReady(null)} />
+      )}
     </article>
   );
 }

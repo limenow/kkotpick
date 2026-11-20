@@ -14,7 +14,28 @@ export const PAYMENT_METHODS: Record<PaymentMethod, string> = {
   onsite: "매장에서 결제",
 };
 
-export const PURPOSES = ["생일", "고백", "졸업", "감사", "기념일", "그냥"] as const;
+// 누구에게 주는 꽃인지 (꽃을 잘 몰라도 여기서부터 시작할 수 있게)
+export const RECIPIENTS = ["연인", "가족", "친구", "선생님·교수님", "직장 동료", "나에게"] as const;
+
+// 어떤 날인지
+export const PURPOSES = ["생일", "기념일", "졸업", "고백", "감사", "축하", "사과", "그냥"] as const;
+
+// 꽃다발 느낌. 꽃 이름 대신 이 단어로 꽃집에 전달된다.
+export const MOODS = [
+  { key: "러블리", desc: "핑크·파스텔로 동글동글 귀엽게" },
+  { key: "화사한", desc: "밝은 색 여러 가지로 눈에 띄게" },
+  { key: "차분한", desc: "톤을 낮춰서 은은하게" },
+  { key: "고급스러운", desc: "꽃 종류는 적게, 크고 깔끔하게" },
+  { key: "내추럴", desc: "들꽃처럼 자연스럽게" },
+] as const;
+export const MOOD_KEYS: string[] = MOODS.map((m) => m.key);
+
+/** 예산으로 크기를 정한다. 손님에게 크기를 따로 묻지 않는다. */
+export function sizeForBudget(budget: number): BouquetSize {
+  if (budget < 30000) return "S";
+  if (budget < 70000) return "M";
+  return "L";
+}
 
 export const BUDGET_OPTIONS = [10000, 20000, 30000, 50000, 70000, 100000];
 

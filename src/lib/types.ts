@@ -17,6 +17,7 @@ export interface ShopSample {
   title: string;
   budget_hint: number | null;
   color_key: ColorKey | null;
+  mood: string | null;
 }
 
 export interface PublicShop {
@@ -53,6 +54,8 @@ export interface OrderView {
   budget: number;
   extra_amount: number;
   purpose: string | null;
+  recipient: string | null;
+  mood: string | null;
   request_note: string | null;
   payment_method: PaymentMethod;
   payment_status: PaymentStatus;
@@ -75,6 +78,7 @@ export interface OrderView {
 // 사장님 주문 목록 한 줄
 export interface OwnerOrder {
   id: string;
+  public_token: string;
   order_no: number;
   source: OrderSource;
   type: "same_day" | "reservation";
@@ -84,6 +88,8 @@ export interface OwnerOrder {
   size: BouquetSize;
   budget: number;
   purpose: string | null;
+  recipient: string | null;
+  mood: string | null;
   request_note: string | null;
   customer_name: string;
   customer_phone: string;
@@ -91,4 +97,5 @@ export interface OwnerOrder {
   payment_status: PaymentStatus;
   reject_reason: string | null;
   created_at: string;
+  photos: { image_path: string }[];
 }

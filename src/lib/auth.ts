@@ -8,6 +8,7 @@ export interface OwnerShop {
   slug: string;
   name: string;
   is_published: boolean;
+  ready_message: string | null;
 }
 
 // 사장님 화면에서 쓰는 로그인 확인. 화면마다 이것만 부른다.
@@ -21,7 +22,7 @@ export async function getOwner() {
 
   const { data: shop } = await supabase
     .from("shops")
-    .select("id, slug, name, is_published")
+    .select("id, slug, name, is_published, ready_message")
     .maybeSingle<OwnerShop>();
 
   return { supabase, user: data.user, shop };

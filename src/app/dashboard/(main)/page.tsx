@@ -5,7 +5,9 @@ import { requireShop } from "@/lib/auth";
 import { addDays, dateLabel, seoulToday } from "@/lib/dates";
 import type { OwnerOrder } from "@/lib/types";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AlertSetup } from "./alert-setup";
 import { AutoRefresh } from "./auto-refresh";
+import { NewOrderAlert } from "./new-order-alert";
 import { OrderCard } from "./order-card";
 
 export const metadata: Metadata = { title: "주문 · 꽃픽 파트너" };
@@ -48,7 +50,7 @@ async function Orders({ searchParams }: { searchParams: PageProps<"/dashboard">[
   const { data, error } = await supabase
     .from("orders")
     .select(
-      "id, order_no, source, type, status, pickup_at, color_key, size, budget, purpose, request_note, customer_name, customer_phone, payment_method, payment_status, reject_reason, created_at",
+      "id, public_token, order_no, source, type, status, pickup_at, color_key, size, budget, purpose, recipient, mood, request_note, customer_name, customer_phone, payment_method, payment_status, reject_reason, created_at, photos:order_photos(image_path)",
     )
     .eq("shop_id", shop.id)
     .gte("pickup_at", from)
@@ -86,7 +88,9 @@ async function Orders({ searchParams }: { searchParams: PageProps<"/dashboard">[
 
   return (
     <>
-      <AutoRefresh />
+      <AutoRefresh seconds={20} />
+      <NewOrderAlert pendingIds={lists.new.map((o) => o.id)} />
+      <AlertSetup compact />
       <h1 className="text-[24px] leading-snug font-bold">{headline}</h1>
 
       <nav aria-label="주문 보기" className="bg-soft grid grid-cols-4 gap-1 rounded-2xl p-1">
@@ -136,7 +140,11 @@ async function Orders({ searchParams }: { searchParams: PageProps<"/dashboard">[
               </h2>
             )}
             {orders.map((o) => (
-              <OrderCard key={o.id} order={o} />
+              <OrderCard
+                key={o.id}
+                order={o}
+                shop={{ id: shop.id, name: shop.name, readyMessage: shop.ready_message }}
+              />
             ))}
           </section>
         ))

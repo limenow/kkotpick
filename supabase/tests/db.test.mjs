@@ -60,7 +60,7 @@ const at = (hhmm) => `${d} ${hhmm}:00+09`;
 const H = "a".repeat(64); // 서버가 넘기는 기기 해시 흉내
 
 const shop = (await db.query(`select public.get_shop_public('bomnal') as j`)).rows[0].j;
-ok("get_shop_public returns shop", shop?.name === "봄날 꽃방" && shop.samples.length === 3);
+ok("get_shop_public returns shop", shop?.name === "봄날 꽃방" && shop.samples.length === 9 && shop.samples[0].mood === "러블리");
 ok("get_shop_public hides bank account", !JSON.stringify(shop).includes("000-0000-0000"));
 
 const slots = (await db.query(`select * from public.get_available_slots('bomnal', $1::date)`, [d]))
@@ -74,6 +74,14 @@ const order = (
   )
 ).rows[0].j;
 ok("create_order returns token", !!order?.public_token);
+const feel = (
+  await db.query(
+    `select public.create_order('bomnal', $1::timestamptz, 'pink', 'M', 50000, '김민수', '01088887777', true, '${"f".repeat(64)}', 'onsite', '생일', null, '여자친구', '러블리') as j`,
+    [at("13:00")],
+  )
+).rows[0].j;
+const feelView = (await db.query(`select public.get_order_by_token($1::uuid) as j`, [feel.public_token])).rows[0].j;
+ok("recipient and mood saved", feelView.recipient === "여자친구" && feelView.mood === "러블리");
 
 const view = (
   await db.query(`select public.get_order_by_token($1::uuid) as j`, [order.public_token])
@@ -354,6 +362,36 @@ ok(
 await expectErr("undo only once", `select public.undo_order_status($1)`, [oid], "undo_expired");
 await db.query(`select public.set_order_status($1, 'ready')`, [oid]);
 await db.query(`select public.set_order_status($1, 'picked_up')`, [oid]);
+const shopOf = (await db.query(`select shop_id from public.orders where id = $1`, [oid])).rows[0].shop_id;
+await db.query(`insert into public.order_photos (order_id, image_path) values ($1, $2)`, [
+  oid,
+  `${shopOf}/${oid}/done.jpg`,
+]);
+ok("owner saves ready photo", true);
+await denied(
+  "photo path must be in the order folder",
+  `insert into public.order_photos (order_id, image_path) values ($1, $2)`,
+  [oid, `${shopOf}/00000000-0000-0000-0000-000000000000/x.jpg`],
+  /photo_path_mismatch/,
+);
+await db.query(`update public.shops set ready_message = '{이름} 님, 다 됐어요'`);
+ok("owner edits ready message", true);
+await db.query(
+  `insert into public.push_subscriptions (user_id, shop_id, endpoint, p256dh, auth) values ($1, $2, 'https://push.example/abc', 'k', 'a')`,
+  [owner, shopOf],
+);
+ok("owner registers push device", true);
+await as(other);
+await denied(
+  "other user cannot subscribe to someone else's shop",
+  `insert into public.push_subscriptions (user_id, shop_id, endpoint, p256dh, auth) values ($1, $2, 'https://push.example/x', 'k', 'a')`,
+  [other, shopOf],
+);
+ok(
+  "other user cannot see owner's devices",
+  (await db.query(`select count(*)::int c from public.push_subscriptions`)).rows[0].c === 0,
+);
+await as(owner);
 ok("accepted → ready → picked_up", true);
 const pendingId = (
   await db.query(

@@ -153,9 +153,25 @@ async function OrderContent({ params }: { params: PageProps<"/o/[token]">["param
 
       <section className="border-line bg-surface flex flex-col gap-2.5 rounded-2xl border p-4 text-sm">
         <h2 className="font-bold">주문 내용</h2>
-        <Row label="색감" value={COLORS[order.color_key]?.label ?? order.color_key} />
-        <Row label="크기감" value={`${order.size} · ${SIZES[order.size]}`} />
-        {order.request_note && <Row label="요청사항" value={order.request_note} />}
+        {(order.recipient || order.purpose) && (
+          <Row
+            label="누구에게"
+            value={[order.recipient, order.purpose === "그냥" ? null : order.purpose]
+              .filter(Boolean)
+              .join(" · ")}
+          />
+        )}
+        {order.mood && <Row label="느낌" value={order.mood} />}
+        <Row
+          label="색감"
+          value={
+            order.color_key === "any"
+              ? "꽃집 추천"
+              : (COLORS[order.color_key]?.label ?? order.color_key)
+          }
+        />
+        <Row label="크기" value={SIZES[order.size]} />
+        {order.request_note && <Row label="전할 말" value={order.request_note} />}
         <div className="border-line flex justify-between border-t pt-2.5 font-bold">
           <span>결제 금액</span>
           <span>{won(order.budget + order.extra_amount)}</span>

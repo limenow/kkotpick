@@ -1,12 +1,16 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { after } from "next/server";
+import { dateLabel, seoulToday, timeLabel } from "@/lib/dates";
+import { COLORS, manwon } from "@/lib/labels";
+import { pushToShop } from "@/lib/push";
 import { clientHash } from "@/lib/client-hash";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { nameProblem, normalizeName } from "@/lib/customer-name";
 import { orderErrorMessage } from "@/lib/order-errors";
-import type { Slot } from "@/lib/types";
+import type { ColorKey, Slot } from "@/lib/types";
 
 export async function fetchSlots(slug: string, date: string): Promise<Slot[]> {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return [];
@@ -54,10 +58,33 @@ export async function submitOrder(
     p_payment_method: get("payment_method") || "onsite",
     p_purpose: get("purpose") || null,
     p_request_note: get("request_note") || null,
+    p_recipient: get("recipient") || null,
+    p_mood: get("mood") || null,
   });
 
   if (error) return { error: orderErrorMessage(error.message) };
 
-  const { public_token } = data as { public_token: string };
+  const { public_token, order_no } = data as { public_token: string; order_no: number };
+
+  // 사장님 기기로 새 주문 알림. 손님은 기다리지 않게 응답을 보낸 뒤에 보낸다.
+  const slug = get("slug");
+  const day = seoulToday(new Date(pickupAt));
+  const color = COLORS[get("color_key") as ColorKey]?.label;
+  const purpose = get("purpose") === "그냥" ? "" : get("purpose");
+  after(() =>
+    pushToShop(slug, {
+      title: `새 주문 #${order_no} · ${day === seoulToday() ? "오늘" : dateLabel(day)} ${timeLabel(pickupAt)}`,
+      body: [
+        [get("recipient"), purpose].filter(Boolean).join(" "),
+        [get("mood"), color].filter(Boolean).join(" "),
+        manwon(budget),
+      ]
+        .filter(Boolean)
+        .join(" · "),
+      url: "/dashboard",
+      tag: `order-${order_no}`,
+    }),
+  );
+
   redirect(`/o/${public_token}`);
 }
