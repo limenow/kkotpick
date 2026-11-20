@@ -78,6 +78,7 @@ export interface OrderView {
 // 사장님 주문 목록 한 줄
 export interface OwnerOrder {
   id: string;
+  public_token: string;
   order_no: number;
   source: OrderSource;
   type: "same_day" | "reservation";
@@ -96,4 +97,5 @@ export interface OwnerOrder {
   payment_status: PaymentStatus;
   reject_reason: string | null;
   created_at: string;
+  photos: { image_path: string }[];
 }

@@ -80,3 +80,18 @@ export async function connectShop(_prev: ConnectState, formData: FormData): Prom
   }
   redirect("/dashboard");
 }
+
+export async function saveReadyMessage(message: string): Promise<ActionResult> {
+  const text = message.trim();
+  if (text.length > 300) return { ok: false, error: "멘트는 300자 안으로 적어주세요." };
+  const supabase = await createClient();
+  // RLS가 자기 가게만 고칠 수 있게 막아준다
+  const { data: shop } = await supabase.from("shops").select("id").maybeSingle<{ id: string }>();
+  if (!shop) return { ok: false, error: "꽃집을 찾지 못했어요." };
+  const { error } = await supabase
+    .from("shops")
+    .update({ ready_message: text || null })
+    .eq("id", shop.id);
+  refresh();
+  return error ? { ok: false, error: "저장하지 못했어요. 잠시 뒤에 다시 해주세요." } : { ok: true };
+}

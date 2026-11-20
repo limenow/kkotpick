@@ -3,6 +3,7 @@ import Link from "next/link";
 import { requireShop } from "@/lib/auth";
 import { Skeleton } from "@/components/ui/skeleton";
 import { signOut } from "../../actions";
+import { ReadyMessageForm } from "./ready-message-form";
 
 // TODO(영업 설정): 영업시간, 당일 주문, 시간대별 최대 주문 수, 주문 링크·QR (디자인: D. 영업 설정)
 export default function SettingsPage() {
@@ -31,6 +32,7 @@ async function Settings() {
           손님 화면 보기 ↗
         </Link>
       </section>
+      <ReadyMessageForm initial={shop.ready_message} shopName={shop.name} />
       <p className="text-muted text-[15px]">
         영업시간, 시간대별 주문 수, 계좌 정보는 다음 업데이트에서 여기서 바꿀 수 있어요. 지금은
         꽃픽에 말씀해 주세요.

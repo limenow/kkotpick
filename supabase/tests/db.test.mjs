@@ -362,6 +362,20 @@ ok(
 await expectErr("undo only once", `select public.undo_order_status($1)`, [oid], "undo_expired");
 await db.query(`select public.set_order_status($1, 'ready')`, [oid]);
 await db.query(`select public.set_order_status($1, 'picked_up')`, [oid]);
+const shopOf = (await db.query(`select shop_id from public.orders where id = $1`, [oid])).rows[0].shop_id;
+await db.query(`insert into public.order_photos (order_id, image_path) values ($1, $2)`, [
+  oid,
+  `${shopOf}/${oid}/done.jpg`,
+]);
+ok("owner saves ready photo", true);
+await denied(
+  "photo path must be in the order folder",
+  `insert into public.order_photos (order_id, image_path) values ($1, $2)`,
+  [oid, `${shopOf}/00000000-0000-0000-0000-000000000000/x.jpg`],
+  /photo_path_mismatch/,
+);
+await db.query(`update public.shops set ready_message = '{이름} 님, 다 됐어요'`);
+ok("owner edits ready message", true);
 ok("accepted → ready → picked_up", true);
 const pendingId = (
   await db.query(
