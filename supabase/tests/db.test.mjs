@@ -376,6 +376,22 @@ await denied(
 );
 await db.query(`update public.shops set ready_message = '{이름} 님, 다 됐어요'`);
 ok("owner edits ready message", true);
+await db.query(
+  `insert into public.push_subscriptions (user_id, shop_id, endpoint, p256dh, auth) values ($1, $2, 'https://push.example/abc', 'k', 'a')`,
+  [owner, shopOf],
+);
+ok("owner registers push device", true);
+await as(other);
+await denied(
+  "other user cannot subscribe to someone else's shop",
+  `insert into public.push_subscriptions (user_id, shop_id, endpoint, p256dh, auth) values ($1, $2, 'https://push.example/x', 'k', 'a')`,
+  [other, shopOf],
+);
+ok(
+  "other user cannot see owner's devices",
+  (await db.query(`select count(*)::int c from public.push_subscriptions`)).rows[0].c === 0,
+);
+await as(owner);
 ok("accepted → ready → picked_up", true);
 const pendingId = (
   await db.query(

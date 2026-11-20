@@ -95,3 +95,56 @@ export async function saveReadyMessage(message: string): Promise<ActionResult> {
   refresh();
   return error ? { ok: false, error: "저장하지 못했어요. 잠시 뒤에 다시 해주세요." } : { ok: true };
 }
+
+export interface PushSubscriptionInput {
+  endpoint: string;
+  keys: { p256dh: string; auth: string };
+}
+
+// 이 기기를 새 주문 알림 받을 곳으로 등록
+export async function savePushSubscription(
+  sub: PushSubscriptionInput,
+  deviceLabel: string,
+): Promise<ActionResult> {
+  const supabase = await createClient();
+  const { data: auth } = await supabase.auth.getUser();
+  const { data: shop } = await supabase.from("shops").select("id").maybeSingle<{ id: string }>();
+  if (!auth.user || !shop) return { ok: false, error: "꽃집을 먼저 연결해주세요." };
+  // 같은 기기를 다시 켜면 예전 기록을 지우고 새로 넣는다
+  await supabase.from("push_subscriptions").delete().eq("endpoint", sub.endpoint);
+  const { error } = await supabase.from("push_subscriptions").insert({
+    user_id: auth.user.id,
+    shop_id: shop.id,
+    endpoint: sub.endpoint,
+    p256dh: sub.keys.p256dh,
+    auth: sub.keys.auth,
+    device_label: deviceLabel.slice(0, 60),
+  });
+  return error
+    ? { ok: false, error: "알림을 켜지 못했어요. 잠시 뒤에 다시 해주세요." }
+    : { ok: true };
+}
+
+export async function removePushSubscription(endpoint: string): Promise<ActionResult> {
+  const supabase = await createClient();
+  await supabase.from("push_subscriptions").delete().eq("endpoint", endpoint);
+  return { ok: true };
+}
+
+// 알림이 잘 오는지 확인용
+export async function sendTestPush(): Promise<ActionResult> {
+  const supabase = await createClient();
+  const { data: shop } = await supabase
+    .from("shops")
+    .select("slug")
+    .maybeSingle<{ slug: string }>();
+  if (!shop) return { ok: false, error: "꽃집을 찾지 못했어요." };
+  const { pushToShop } = await import("@/lib/push");
+  await pushToShop(shop.slug, {
+    title: "알림 테스트",
+    body: "새 주문이 들어오면 이렇게 알려드려요",
+    url: "/dashboard",
+    tag: "test",
+  });
+  return { ok: true };
+}

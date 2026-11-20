@@ -14,6 +14,9 @@ const pretendard = localFont({
 export const metadata: Metadata = {
   title: "꽃픽",
   description: "꽃 이름 몰라도 괜찮아요. 색감이랑 예산만 고르면 동네 꽃집이 만들어드려요.",
+  // 아이폰 홈 화면에 추가했을 때 앱처럼 열리게
+  appleWebApp: { capable: true, title: "꽃픽", statusBarStyle: "default" },
+  icons: { apple: "/apple-touch-icon.png" },
 };
 
 export const viewport: Viewport = {

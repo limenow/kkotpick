@@ -48,6 +48,24 @@ STATUS_ENV="$status_env" node -e '
   console.log("NEXT_PUBLIC_SUPABASE_URL=" + url);
 '
 
+say "새 주문 알림(웹 푸시) 키 만들기 (이미 있으면 그대로 둬요)"
+if ! grep -q "^VAPID_PRIVATE_KEY=." .env.local; then
+  node --input-type=module -e '
+    import fs from "fs";
+    import { generateVAPIDKeys } from "web-push";
+    const k = generateVAPIDKeys();
+    let env = fs.readFileSync(".env.local", "utf8");
+    const set = (key, v) => {
+      const re = new RegExp("^" + key + "=.*$", "m");
+      env = re.test(env) ? env.replace(re, key + "=" + v) : env + "\n" + key + "=" + v + "\n";
+    };
+    set("NEXT_PUBLIC_VAPID_PUBLIC_KEY", k.publicKey);
+    set("VAPID_PRIVATE_KEY", k.privateKey);
+    fs.writeFileSync(".env.local", env);
+    console.log("VAPID 키를 .env.local에 넣었어요");
+  '
+fi
+
 say "DB 초기화 (마이그레이션 + 데모 꽃집)"
 npx supabase db reset
 
